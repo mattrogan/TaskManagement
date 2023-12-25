@@ -1,11 +1,12 @@
 using TaskManagement.Server.Data;
-using Swashbuckle.AspNetCore.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(opts => opts.UseMemberCasing());
+
 builder.Services.AddRazorPages();
 builder.Services.AddDbContext<TaskContext>();
 
