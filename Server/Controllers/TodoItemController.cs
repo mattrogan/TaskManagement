@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TaskManagement.Shared.Models;
-using System.Linq;
-using TaskManagement.Server.Data;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
+using System.Net;
+using TaskManagement.Server.Data;
+using TaskManagement.Server.ViewModels;
+using TaskManagement.Shared.Models;
 
 namespace TaskManagement.Server.Controllers
 {
@@ -11,11 +14,13 @@ namespace TaskManagement.Server.Controllers
     public class TodoItemController : ControllerBase
     {
         private readonly ILogger<TodoItemController> logger;
+        private readonly IMapper mapper;
         private readonly TaskContext ctx;
 
-        public TodoItemController(ILogger<TodoItemController> logger, TaskContext ctx)
+        public TodoItemController(ILogger<TodoItemController> logger, IMapper mapper, TaskContext ctx)
         {
             this.logger = logger;
+            this.mapper = mapper;
             this.ctx = ctx;
         }
 
@@ -23,7 +28,7 @@ namespace TaskManagement.Server.Controllers
         public async Task<IActionResult> GetTasksAsync()
         {
             var todoItems = await ctx.TodoItems.ToListAsync();
-            return Ok(todoItems);
+            return Ok(todoItems.AsQueryable());
         }
 
         [HttpGet("{id}")]
@@ -36,6 +41,97 @@ namespace TaskManagement.Server.Controllers
             }
 
             return Ok(todoItem);
+        }
+
+        [HttpGet("completed")]
+        public async Task<IActionResult> GetCompletedTasksAsync()
+        {
+            var completedTasks = await ctx.TodoItems.Where(t => t.IsCompleted).ToListAsync();
+            return Ok(completedTasks.AsQueryable());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PostTaskAsync(PostTodoItem model)
+        {
+            if (model == null || !ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var task = mapper.Map(model, new TodoItem());
+
+            await ctx.AddAsync(task);
+            await ctx.SaveChangesAsync();
+
+            return Created(nameof(PostTaskAsync), task);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutTaskAsync(int id, PostTodoItem model)
+        {
+            if (model == null || !ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var task = await ctx.TodoItems.FindAsync(id);
+            if (task == null)
+            {
+                return NotFound(id);
+            }
+
+            try
+            {
+                mapper.Map(model, task);
+                await ctx.SaveChangesAsync();
+                return Ok(task);
+            }
+            catch (DbException ex)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, ex.Message);
+            }
+        }
+
+        [HttpPut("completeTask({id})")]
+        public async Task<IActionResult> CompleteTaskAsync(int id)
+        {
+            var task = await ctx.TodoItems.FindAsync(id);
+            if (task == null)
+            {
+                return NotFound(id);
+            }
+
+            if (task.IsCompleted)
+            {
+                return BadRequest("Cannot complete a task that is already completed");
+            }
+
+            task.IsCompleted = true;
+            await ctx.SaveChangesAsync();
+
+            return Ok(task);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTaskAsync(int id)
+        {
+            var task = await ctx.TodoItems.FindAsync(id);
+            if (task == null)
+            {
+                return NotFound(id);
+            }
+
+            try
+            {
+                ctx.Remove(task);
+                await ctx.SaveChangesAsync();
+            }
+            catch (DbException ex)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError);
+            }
+
+            return NoContent();
         }
     }
 }
