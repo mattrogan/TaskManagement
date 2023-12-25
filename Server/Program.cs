@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.ResponseCompression;
+using TaskManagement.Server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+// Configure Sqlite database
+builder.Services.AddDbContext<TaskContext>();
 
 var app = builder.Build();
 
