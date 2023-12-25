@@ -34,7 +34,7 @@ namespace TaskManagement.Server.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTaskAsync(int id)
         {
-            var todoItem = await ctx.TodoItems.FindAsync(id);
+            var todoItem = await ctx.TodoItems.SingleOrDefaultAsync(t => t.Id == id);
             if (todoItem == null)
             {
                 return NotFound(id);
