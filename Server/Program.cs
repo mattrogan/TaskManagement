@@ -7,8 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-
-// Configure Sqlite database
 builder.Services.AddDbContext<TaskContext>();
 
 // Configure Swagger
@@ -22,7 +20,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
 
-    // Run Swagger UI
     app.UseSwagger();
     app.UseSwaggerUI();
 }
