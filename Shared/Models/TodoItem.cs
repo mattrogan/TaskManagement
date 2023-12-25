@@ -34,6 +34,9 @@ namespace TaskManagement.Shared.Models
         [Required]
         public DateTime DueDate { get; set; }
 
+        [DataMember(Name = "done")]
+        public bool IsCompleted { get; set; } = false;
+
         public override bool Equals(object? obj)
         {
             if (obj.GetType() != this.GetType())
@@ -50,7 +53,8 @@ namespace TaskManagement.Shared.Models
             return this.Id == other.Id
                 && this.Title == other.Title
                 && this.Description == other.Description
-                && this.DueDate == other.DueDate;
+                && this.DueDate == other.DueDate
+                && this.IsCompleted == other.IsCompleted;
         }
     }
 }
