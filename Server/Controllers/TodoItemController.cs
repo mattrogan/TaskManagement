@@ -10,14 +10,14 @@ using TaskManagement.Shared.Models;
 namespace TaskManagement.Server.Controllers
 {
     [ApiController]
-    [Route("[controller]/")]
+    [Route("[controller]")]
     public class TodoItemController : ControllerBase
     {
         private readonly ILogger<TodoItemController> logger;
         private readonly IMapper mapper;
-        private readonly TaskContext ctx;
+        private readonly ITaskContext ctx;
 
-        public TodoItemController(ILogger<TodoItemController> logger, IMapper mapper, TaskContext ctx)
+        public TodoItemController(ILogger<TodoItemController> logger, IMapper mapper, ITaskContext ctx)
         {
             this.logger = logger;
             this.mapper = mapper;
@@ -128,7 +128,7 @@ namespace TaskManagement.Server.Controllers
             }
             catch (DbException ex)
             {
-                return StatusCode((int)HttpStatusCode.InternalServerError);
+                return StatusCode((int)HttpStatusCode.InternalServerError, ex.Message);
             }
 
             return NoContent();

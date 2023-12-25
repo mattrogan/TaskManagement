@@ -1,6 +1,5 @@
 using TaskManagement.Server.Data;
 using TaskManagement.Server.MappingProfiles;
-using TaskManagement.Shared.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddRazorPages();
+builder.Services.AddTransient<ITaskContext, TaskContext>();
 builder.Services.AddDbContext<TaskContext>();
 
 // Configure Swagger
