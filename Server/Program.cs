@@ -1,4 +1,5 @@
 using TaskManagement.Server.Data;
+using Swashbuckle.AspNetCore.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,12 +11,20 @@ builder.Services.AddRazorPages();
 // Configure Sqlite database
 builder.Services.AddDbContext<TaskContext>();
 
+// Configure Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
+
+    // Run Swagger UI
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 else
 {
