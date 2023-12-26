@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 using System.Net;
+using TaskManagement.Server.Constants;
 using TaskManagement.Server.Data;
 using TaskManagement.Server.ViewModels;
 using TaskManagement.Shared.Models;
@@ -60,10 +61,17 @@ namespace TaskManagement.Server.Controllers
 
             var task = mapper.Map(model, new TodoItem());
 
-            await ctx.AddAsync(task);
-            await ctx.SaveChangesAsync();
+            try
+            {
+                await ctx.AddAsync(task);
+                await ctx.SaveChangesAsync();
 
-            return Created(nameof(PostTaskAsync), task);
+                return Created(nameof(PostTaskAsync), task);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, ex.Message);
+            }
         }
 
         [HttpPut("{id}")]
@@ -74,7 +82,7 @@ namespace TaskManagement.Server.Controllers
                 return BadRequest(ModelState);
             }
 
-            var task = await ctx.TodoItems.FindAsync(id);
+            var task = await ctx.TodoItems.SingleOrDefaultAsync(t => t.Id == id);
             if (task == null)
             {
                 return NotFound(id);
@@ -86,7 +94,7 @@ namespace TaskManagement.Server.Controllers
                 await ctx.SaveChangesAsync();
                 return Ok(task);
             }
-            catch (DbException ex)
+            catch (Exception ex)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, ex.Message);
             }
@@ -95,7 +103,7 @@ namespace TaskManagement.Server.Controllers
         [HttpPut("completeTask({id})")]
         public async Task<IActionResult> CompleteTaskAsync(int id)
         {
-            var task = await ctx.TodoItems.FindAsync(id);
+            var task = await ctx.TodoItems.SingleOrDefaultAsync(t => t.Id == id);
             if (task == null)
             {
                 return NotFound(id);
@@ -103,7 +111,7 @@ namespace TaskManagement.Server.Controllers
 
             if (task.IsCompleted)
             {
-                return BadRequest("Cannot complete a task that is already completed");
+                return BadRequest(TodoItemConstants.ERROR_TASKALREADYCOMPLETED);
             }
 
             task.IsCompleted = true;
@@ -115,7 +123,7 @@ namespace TaskManagement.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTaskAsync(int id)
         {
-            var task = await ctx.TodoItems.FindAsync(id);
+            var task = await ctx.TodoItems.SingleOrDefaultAsync(t => t.Id == id);
             if (task == null)
             {
                 return NotFound(id);
@@ -126,7 +134,7 @@ namespace TaskManagement.Server.Controllers
                 ctx.Remove(task);
                 await ctx.SaveChangesAsync();
             }
-            catch (DbException ex)
+            catch (Exception ex)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, ex.Message);
             }
