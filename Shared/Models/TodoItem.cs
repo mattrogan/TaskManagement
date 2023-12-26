@@ -1,9 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Runtime.Serialization;
 
 namespace TaskManagement.Shared.Models
 {
-    [DataContract]
     public class TodoItem
     {
         public TodoItem()
@@ -18,21 +16,19 @@ namespace TaskManagement.Shared.Models
             DueDate = dueDate;
         }
 
-        [DataMember(Name = "id")]
         [Required]
         public int Id { get; set; }
 
-        [DataMember(Name = "name")]
         [Required]
         public string Title { get; set; } = string.Empty;
 
-        [DataMember(Name = "desc")]
         [Required]
         public string Description { get; set; } = string.Empty;
 
-        [DataMember(Name = "due")]
         [Required]
         public DateTime DueDate { get; set; }
+
+        public bool IsCompleted { get; set; } = false;
 
         public override bool Equals(object? obj)
         {
@@ -50,7 +46,8 @@ namespace TaskManagement.Shared.Models
             return this.Id == other.Id
                 && this.Title == other.Title
                 && this.Description == other.Description
-                && this.DueDate == other.DueDate;
+                && this.DueDate == other.DueDate
+                && this.IsCompleted == other.IsCompleted;
         }
     }
 }

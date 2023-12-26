@@ -3,7 +3,7 @@ using TaskManagement.Shared.Models;
 
 namespace TaskManagement.Server.Data
 {
-    public class TaskContext : DbContext
+    public class TaskContext : DbContext, ITaskContext
     {
         public TaskContext(DbContextOptions<TaskContext> opts)
             : base(opts)
@@ -20,5 +20,14 @@ namespace TaskManagement.Server.Data
         {
             optionsBuilder.UseSqlite("Data Source = TaskManagement.db");
         }
+
+        public async Task SaveChangesAsync()
+            => await base.SaveChangesAsync();
+
+        public async Task AddAsync(TodoItem item)
+            => await base.AddAsync(item);
+
+        public void Remove(TodoItem task)
+            => base.Remove(task);
     }
 }

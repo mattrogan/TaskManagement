@@ -1,16 +1,26 @@
 using Microsoft.EntityFrameworkCore;
 using TaskManagement.Server.Data;
+using TaskManagement.Server.MappingProfiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllers();
+
 builder.Services.AddRazorPages();
 
-// Configure Sqlite database
-builder.Services.AddDbContext<TaskContext>(opts => 
+// Configure the database context
+builder.Services.AddTransient<ITaskContext, TaskContext>();
+builder.Services.AddDbContext<TaskContext>(opts =>
     opts.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Configure mapping profiles
+builder.Services.AddAutoMapper(typeof(TodoItemMappingProfiles).Assembly);
 
 var app = builder.Build();
 
@@ -18,6 +28,9 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
+
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 else
 {

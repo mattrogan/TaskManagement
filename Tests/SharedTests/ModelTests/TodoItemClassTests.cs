@@ -26,7 +26,7 @@ namespace TaskManagement.Tests.SharedTests.ModelTests
         }
 
         [TestMethod]
-        public void TodoItem_Equals_ShouldReturnTrueWhenObjectsEqual()
+        public void TodoItem_Equals_ReturnsTrueWhenObjectsEqual()
         {
             var dateNow = DateTime.Now;
             var task1 = new TodoItem("Foo", "Bar", dateNow);
@@ -36,7 +36,7 @@ namespace TaskManagement.Tests.SharedTests.ModelTests
         }
 
         [TestMethod]
-        public void TodoItem_Equals_ShouldReturnFalseWhenObjectsNotEqual()
+        public void TodoItem_Equals_ReturnsFalseWhenObjectsNotEqual()
         {
             var dateNow = DateTime.Now;
             var task1 = new TodoItem("1", "One", dateNow);
