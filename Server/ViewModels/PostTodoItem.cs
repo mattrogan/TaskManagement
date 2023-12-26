@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace TaskManagement.Server.ViewModels
+﻿namespace TaskManagement.Server.ViewModels
 {
     public class PostTodoItem
     {

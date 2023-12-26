@@ -9,8 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddRazorPages();
+
+// Configure the database context
 builder.Services.AddTransient<ITaskContext, TaskContext>();
-builder.Services.AddDbContext<TaskContext>(opts => 
+builder.Services.AddDbContext<TaskContext>(opts =>
     opts.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure Swagger

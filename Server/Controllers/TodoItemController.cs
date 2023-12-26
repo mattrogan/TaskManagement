@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Data.Common;
 using System.Net;
 using TaskManagement.Server.Constants;
 using TaskManagement.Server.Data;
