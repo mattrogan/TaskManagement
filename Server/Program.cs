@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using TaskManagement.Server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +9,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 // Configure Sqlite database
-builder.Services.AddDbContext<TaskContext>();
+builder.Services.AddDbContext<TaskContext>(opts => 
+    opts.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
