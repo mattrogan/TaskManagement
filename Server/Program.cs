@@ -13,7 +13,11 @@ builder.Services.AddRazorPages();
 // Configure the database context
 builder.Services.AddTransient<ITaskContext, TaskContext>();
 builder.Services.AddDbContext<TaskContext>(opts =>
-    opts.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+    var path = Path.Combine(folder, "TaskManagement.db");
+    opts.UseSqlite(string.Format(builder.Configuration.GetConnectionString("DefaultConnection"), path));
+});
 
 // Configure Swagger
 builder.Services.AddEndpointsApiExplorer();

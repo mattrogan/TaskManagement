@@ -16,11 +16,6 @@ namespace TaskManagement.Server.Data
         {
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlite("Data Source = TaskManagement.db");
-        }
-
         public async Task SaveChangesAsync()
             => await base.SaveChangesAsync();
 
