@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using TaskManagement.Server.Data;
 using TaskManagement.Server.MappingProfiles;
 
@@ -9,7 +10,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddRazorPages();
 builder.Services.AddTransient<ITaskContext, TaskContext>();
-builder.Services.AddDbContext<TaskContext>();
+builder.Services.AddDbContext<TaskContext>(opts => 
+    opts.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure Swagger
 builder.Services.AddEndpointsApiExplorer();

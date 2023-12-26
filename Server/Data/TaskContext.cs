@@ -5,6 +5,11 @@ namespace TaskManagement.Server.Data
 {
     public class TaskContext : DbContext, ITaskContext
     {
+        public TaskContext(DbContextOptions<TaskContext> opts)
+            : base(opts)
+        {
+
+        }
         public DbSet<TodoItem> TodoItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
