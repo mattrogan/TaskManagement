@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TaskManagement.Server.Data;
 using TaskManagement.Server.MappingProfiles;
+using TaskManagement.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ builder.Services.AddRazorPages();
 
 // Configure the database context
 builder.Services.AddTransient<ITaskContext, TaskContext>();
+builder.Services.AddTransient<ITaskService, TaskService>();
 builder.Services.AddDbContext<TaskContext>(opts =>
 {
     var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
