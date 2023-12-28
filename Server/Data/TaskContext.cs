@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TaskManagement.Server.Data.ModelConfigurations;
 using TaskManagement.Shared.Models;
 
 namespace TaskManagement.Server.Data
@@ -8,12 +9,13 @@ namespace TaskManagement.Server.Data
         public TaskContext(DbContextOptions<TaskContext> opts)
             : base(opts)
         {
-
         }
-        public DbSet<TodoItem> TodoItems { get; set; }
+
+        public DbSet<TodoItem> TodoItems => this.Set <TodoItem>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.ApplyConfiguration(new TodoItemConfiguration());
         }
 
         public async Task SaveChangesAsync()

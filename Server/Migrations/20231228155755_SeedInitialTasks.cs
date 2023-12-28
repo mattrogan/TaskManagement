@@ -12,7 +12,7 @@ namespace TaskManagement.Server.Migrations
             foreach (var task in SeedData_InitialTasks.InitialTasks)
             {
                 migrationBuilder.InsertData(
-                    table: "TodoItems",
+                    table: "TodoItem",
                     columns: new[] { "Id", "Title", "Description", "DueDate" },
                     values: new object[] { task.Id, task.Title, task.Description, task.DueDate });
             }
@@ -23,7 +23,7 @@ namespace TaskManagement.Server.Migrations
             foreach (var task in SeedData_InitialTasks.InitialTasks)
             {
                 migrationBuilder.DeleteData(
-                    table: "TodoItems",
+                    table: "TodoItem",
                     keyColumn: "Id",
                     keyValue: task.Id);
             }
