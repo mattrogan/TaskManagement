@@ -15,9 +15,9 @@ namespace TaskManagement.Server.Controllers
     {
         private readonly ILogger<TodoItemController> logger;
         private readonly IMapper mapper;
-        private readonly ITaskContext ctx;
+        private readonly TaskContext ctx;
 
-        public TodoItemController(ILogger<TodoItemController> logger, IMapper mapper, ITaskContext ctx)
+        public TodoItemController(ILogger<TodoItemController> logger, IMapper mapper, TaskContext ctx)
         {
             this.logger = logger;
             this.mapper = mapper;
@@ -27,14 +27,14 @@ namespace TaskManagement.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTasksAsync()
         {
-            var todoItems = await ctx.TodoItems.ToListAsync();
+            var todoItems = await ctx.Set<TodoItem>().ToListAsync();
             return Ok(todoItems.AsQueryable());
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTaskAsync(int id)
         {
-            var todoItem = await ctx.TodoItems.SingleOrDefaultAsync(t => t.Id == id);
+            var todoItem = await ctx.Set<TodoItem>().SingleOrDefaultAsync(t => t.Id == id);
             if (todoItem == null)
             {
                 return NotFound(id);
@@ -46,7 +46,7 @@ namespace TaskManagement.Server.Controllers
         [HttpGet("completed")]
         public async Task<IActionResult> GetCompletedTasksAsync()
         {
-            var completedTasks = await ctx.TodoItems.Where(t => t.IsCompleted).ToListAsync();
+            var completedTasks = await ctx.Set<TodoItem>().Where(t => t.IsCompleted).ToListAsync();
             return Ok(completedTasks.AsQueryable());
         }
 
@@ -81,7 +81,7 @@ namespace TaskManagement.Server.Controllers
                 return BadRequest(ModelState);
             }
 
-            var task = await ctx.TodoItems.SingleOrDefaultAsync(t => t.Id == id);
+            var task = await ctx.Set<TodoItem>().SingleOrDefaultAsync(t => t.Id == id);
             if (task == null)
             {
                 return NotFound(id);
@@ -102,7 +102,7 @@ namespace TaskManagement.Server.Controllers
         [HttpPut("completeTask({id})")]
         public async Task<IActionResult> CompleteTaskAsync(int id)
         {
-            var task = await ctx.TodoItems.SingleOrDefaultAsync(t => t.Id == id);
+            var task = await ctx.Set<TodoItem>().SingleOrDefaultAsync(t => t.Id == id);
             if (task == null)
             {
                 return NotFound(id);
@@ -122,7 +122,7 @@ namespace TaskManagement.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTaskAsync(int id)
         {
-            var task = await ctx.TodoItems.SingleOrDefaultAsync(t => t.Id == id);
+            var task = await ctx.Set<TodoItem>().SingleOrDefaultAsync(t => t.Id == id);
             if (task == null)
             {
                 return NotFound(id);

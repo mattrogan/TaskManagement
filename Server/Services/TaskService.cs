@@ -6,18 +6,18 @@ namespace TaskManagement.Server.Services
 {
     public class TaskService : ITaskService
     {
-        private readonly ITaskContext ctx;
+        private readonly TaskContext ctx;
 
-        public TaskService(ITaskContext ctx)
+        public TaskService(TaskContext ctx)
         {
             this.ctx = ctx;
         }
 
         public async Task<IEnumerable<TodoItem>> GetTasksAsync()
-            => await ctx.TodoItems.ToListAsync();
+            => await ctx.Set<TodoItem>().ToListAsync();
 
         public async Task<TodoItem?> GetTaskAsync(int id)
-            => await ctx.TodoItems.SingleOrDefaultAsync(t => t.Id == id);
+            => await ctx.Set<TodoItem>().SingleOrDefaultAsync(t => t.Id == id);
 
         public async Task<bool> AddTaskAsync(TodoItem item)
         {
@@ -37,7 +37,7 @@ namespace TaskManagement.Server.Services
         {
             try
             {
-                ctx.TodoItems.Update(task);
+                ctx.Set<TodoItem>().Update(task);
                 await ctx.SaveChangesAsync();
                 return true;
             }

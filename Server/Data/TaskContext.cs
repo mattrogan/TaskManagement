@@ -4,14 +4,12 @@ using TaskManagement.Shared.Models;
 
 namespace TaskManagement.Server.Data
 {
-    public class TaskContext : DbContext, ITaskContext
+    public class TaskContext : DbContext
     {
         public TaskContext(DbContextOptions<TaskContext> opts)
             : base(opts)
         {
         }
-
-        public DbSet<TodoItem> TodoItems => this.Set <TodoItem>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
