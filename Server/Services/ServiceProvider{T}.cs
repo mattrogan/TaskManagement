@@ -23,9 +23,18 @@ namespace TaskManagement.Server.Services
             return item;
         }
 
-        public Task<bool> AddAsync(T item)
+        public async Task<bool> AddAsync(T item)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await this.ctx.Set<T>().AddAsync(item);
+                await this.ctx.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public Task<bool> DeleteAsync(T task)
