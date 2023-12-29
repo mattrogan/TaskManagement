@@ -12,6 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddRazorPages();
 
 // Configure the database context
+builder.Services.AddScoped(typeof(IServiceProvider<>), typeof(ServiceProvider<>));
 builder.Services.AddTransient<ITaskService, TaskService>();
 builder.Services.AddDbContext<TaskContext>(opts =>
 {

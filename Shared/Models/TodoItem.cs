@@ -2,7 +2,7 @@
 
 namespace TaskManagement.Shared.Models
 {
-    public class TodoItem
+    public class TodoItem : BaseEntity
     {
         public TodoItem()
         {
@@ -15,9 +15,6 @@ namespace TaskManagement.Shared.Models
             Description = desc;
             DueDate = dueDate;
         }
-
-        [Required]
-        public int Id { get; set; }
 
         [Required]
         public string Title { get; set; } = string.Empty;
