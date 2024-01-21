@@ -26,10 +26,7 @@ namespace TaskManagement.Server.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetTasksAsync()
-        {
-            var todoItems = await ctx.TodoItems.ToListAsync();
-            return Ok(todoItems.AsQueryable());
-        }
+            => Ok(ctx.TodoItems);
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTaskAsync(int id)
@@ -46,8 +43,8 @@ namespace TaskManagement.Server.Controllers
         [HttpGet("completed")]
         public async Task<IActionResult> GetCompletedTasksAsync()
         {
-            var completedTasks = await ctx.TodoItems.Where(t => t.IsCompleted).ToListAsync();
-            return Ok(completedTasks.AsQueryable());
+            var completedTasks = ctx.TodoItems.Where(t => t.IsCompleted);
+            return Ok(completedTasks);
         }
 
         [HttpPost]
