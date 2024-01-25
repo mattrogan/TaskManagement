@@ -5,7 +5,7 @@ namespace Server.UnitOfWork;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly TaskContext context;
-    private Dictionary<Type, object> repositories;
+    private readonly Dictionary<Type, object> repositories;
 
     public UnitOfWork(TaskContext context)
     {
@@ -22,7 +22,4 @@ public class UnitOfWork : IUnitOfWork
         repositories.Add(typeof(T), repository);
         return repository;
     }
-
-    public void Dispose()
-        => context.Dispose();
 }
