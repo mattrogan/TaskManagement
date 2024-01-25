@@ -13,14 +13,6 @@ public class UnitOfWork : IUnitOfWork
         this.repositories = new();
     }
 
-    public void Commit()
-        => context.SaveChanges();
-
-    public void Rollback()
-    {
-
-    }
-
     public IRepository<T> GetRepository<T>() where T : class
     {
         if (repositories.ContainsKey(typeof(T)))

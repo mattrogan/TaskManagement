@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using TaskManagement.Server.Data;
 
 namespace Server.UnitOfWork;
@@ -13,7 +14,7 @@ public class Repository<T> : IRepository<T> where T : class
     }
 
     public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> condition)
-        => context.Set<T>().Where(condition);
+        => await context.Set<T>().Where(condition).ToListAsync();
 
     public async Task<T?> SingleAsync(int id)
         => await context.Set<T>().FindAsync(id);
