@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Server.UnitOfWork;
 using TaskManagement.Server.Data;
 using TaskManagement.Server.MappingProfiles;
 
@@ -10,8 +11,11 @@ builder.Services.AddControllers();
 
 builder.Services.AddRazorPages();
 
-// Configure the database context
-builder.Services.AddTransient<ITaskContext, TaskContext>();
+// Configure the database context, unit of work, and repositories
+builder.Services.AddScoped<ITaskContext, TaskContext>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
 builder.Services.AddDbContext<TaskContext>(opts =>
 {
     var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
