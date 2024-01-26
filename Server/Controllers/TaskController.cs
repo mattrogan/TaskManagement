@@ -37,7 +37,7 @@ public class TaskController : ControllerBase
         {
             return NotFound(id);
         }
-        
+
         return Ok(task);
     }
 }
