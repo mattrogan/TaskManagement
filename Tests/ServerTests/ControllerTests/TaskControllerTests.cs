@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -36,6 +37,7 @@ public class TaskControllerTests
         mockMapper.Verify();
     } 
 
+    #region Get
     [TestMethod]
     public async Task GetTasksAsyncShouldReturnCollectionOfTasks()
     {
@@ -138,8 +140,69 @@ public class TaskControllerTests
         Assert.IsNotNull(okResult);
         Assert.AreEqual(task, okResult.Value);
     }
+    #endregion
 
+    #region Delete
+    [TestMethod]
+    public async Task DeleteTaskAsyncShouldReturnNotFoundWhenTaskDoesntExist()
+    {
+        var id = new Random().Next();
 
+        mockUnitOfWork
+            .Setup(x => x.GetRepository<TodoItem>())
+            .Returns(mockTaskRepository.Object)
+            .Verifiable();
+
+        mockTaskRepository
+            .Setup(x => x.SingleAsync(It.IsAny<int>()))
+            .Returns(Task.FromResult<TodoItem>(null))
+            .Verifiable();
+
+        var subject = GetTaskController();
+
+        var result = await subject.DeleteTaskAsync(id);
+        Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
+
+        var notFoundResult = result as NotFoundObjectResult;
+        Assert.IsNotNull(notFoundResult);
+        Assert.AreEqual(id, notFoundResult.Value);
+    }
+
+    [TestMethod]
+    public async Task DeleteTaskAsyncShouldReturnInternalServerErrorWhenDeleteFails()
+    {
+        var id = new Random().Next();
+        var task = new TodoItem { Id = id };
+
+        mockUnitOfWork
+            .Setup(x => x.GetRepository<TodoItem>())
+            .Returns(mockTaskRepository.Object)
+            .Verifiable();
+
+        mockTaskRepository
+            .Setup(x => x.SingleAsync(id))
+            .Returns(Task.FromResult(task))
+            .Verifiable();
+
+        mockTaskRepository
+            .Setup(x => x.DeleteAsync(task))
+            .Returns(Task.FromResult(false))
+            .Verifiable();
+
+        mockLogger
+            .Setup(x => x.LogError(It.IsAny<string>(), It.IsAny<object[]>()));
+
+        var subject = GetTaskController();
+        
+        var result = await subject.DeleteTaskAsync(id);
+        Assert.IsInstanceOfType(result, typeof(StatusCodeResult));
+        
+        var statusResult = result as StatusCodeResult;
+        Assert.IsNotNull(statusResult);
+        Assert.AreEqual((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
+    }
+
+    #endregion
     internal TaskController GetTaskController()
         => new TaskController(mockUnitOfWork.Object, mockLogger.Object, mockMapper.Object);
 }

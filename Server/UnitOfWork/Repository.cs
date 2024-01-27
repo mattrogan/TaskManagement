@@ -18,4 +18,18 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async Task<T?> SingleAsync(int id)
         => await context.Set<T>().FindAsync(id);
+
+    public async Task<bool> DeleteAsync(T entry)
+    {
+        try
+        {
+            context.Remove(entry);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 }

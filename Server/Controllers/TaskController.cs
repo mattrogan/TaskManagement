@@ -1,3 +1,4 @@
+using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Server.UnitOfWork;
@@ -35,9 +36,29 @@ public class TaskController : ControllerBase
         var task = await taskRepository.SingleAsync(id);
         if (task == null)
         {
+            this.logger.LogInformation("Could not find task with id {TaskId}", id);
             return NotFound(id);
         }
 
         return Ok(task);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTaskAsync(int id)
+    {
+        // Find the task
+        var task = await taskRepository.SingleAsync(id);
+        if (task == null)
+        {
+            return NotFound(id);
+        }
+
+        if (!await taskRepository.DeleteAsync(task))
+        {
+            this.logger.LogError("Unable to delete task with id {TaskId}", id);
+            return StatusCode((int)HttpStatusCode.InternalServerError);
+        }
+
+        return NoContent();
     }
 }
