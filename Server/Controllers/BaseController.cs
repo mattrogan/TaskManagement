@@ -1,6 +1,5 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Server.UnitOfWork;
 
 namespace Server.Controllers;
@@ -16,6 +15,7 @@ public class BaseController : ControllerBase
     }
 
     public BaseController(IUnitOfWork unitOfWork, ILogger<BaseController> logger, IMapper mapper)
+        : this()
     {
         this.unitOfWork = unitOfWork;
         this.logger = logger;
