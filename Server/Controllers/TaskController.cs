@@ -72,6 +72,7 @@ public class TaskController : BaseController<TodoItem>
         var task = await taskRepository.SingleAsync(id);
         if (task == null)
         {
+            logger.LogInformation("Could not find task with id {TaskId}", id);
             return NotFound(id);
         }
 

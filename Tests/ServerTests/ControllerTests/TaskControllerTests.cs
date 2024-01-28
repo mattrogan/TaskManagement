@@ -189,6 +189,73 @@ public class TaskControllerTests : BaseControllerTests
     }
     #endregion
 
+    #region Delete
+    [TestMethod]
+    public async Task DeleteTaskAsyncShouldReturnNotFoundWhenTaskDoesntExist()
+    {
+        var id = new Random().Next();
+
+        mockTaskRepository
+            .Setup(x => x.SingleAsync(id))
+            .Returns(Task.FromResult<TodoItem>(null))
+            .Verifiable();
+
+        var subject = GetTaskController();
+        var result = await subject.DeleteTaskAsync(id);
+        Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
+
+        var notFoundResult = result as NotFoundObjectResult;
+        Assert.IsNotNull(notFoundResult);
+        Assert.AreEqual(id, notFoundResult.Value);
+    }
+
+    [TestMethod]
+    public async Task DeleteTaskAsyncShouldReturnInternalServerErrorWhenDeleteFails()
+    {
+        var id = new Random().Next();
+        var task = new TodoItem { Id = id };
+
+        mockTaskRepository
+            .Setup(x => x.SingleAsync(id))
+            .Returns(Task.FromResult(task))
+            .Verifiable();
+
+        mockTaskRepository
+            .Setup(x => x.DeleteAsync(task))
+            .Returns(Task.FromResult(false))
+            .Verifiable();
+
+        var subject = GetTaskController();
+        var result = await subject.DeleteTaskAsync(id);
+        Assert.IsInstanceOfType(result, typeof(StatusCodeResult));
+
+        var statusResult = result as StatusCodeResult;
+        Assert.IsNotNull(statusResult);
+        Assert.AreEqual((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task DeleteTaskAsyncShouldReturnNoContentAndDeleteTask()
+    {
+        var id = new Random().Next();
+        var task = new TodoItem { Id = id };
+
+        mockTaskRepository
+            .Setup(x => x.SingleAsync(id))
+            .Returns(Task.FromResult(task))
+            .Verifiable();
+
+        mockTaskRepository
+            .Setup(x => x.DeleteAsync(task))
+            .Returns(Task.FromResult(true))
+            .Verifiable();
+
+        var subject = GetTaskController();
+        var result = await subject.DeleteTaskAsync(id);
+        Assert.IsInstanceOfType(result, typeof(NoContentResult));
+    }
+    #endregion
+
     internal TaskController GetTaskController()
         => new TaskController(mockUnitOfWork.Object, mockLogger.Object, mockMapper.Object);
 }
