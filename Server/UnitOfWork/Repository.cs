@@ -19,6 +19,27 @@ public class Repository<T> : IRepository<T> where T : class
     public async Task<T?> SingleAsync(int id)
         => await context.Set<T>().FindAsync(id);
 
+    public async Task<T> AddAsync(T entry)
+    {
+        await context.AddAsync(entry);
+        await context.SaveChangesAsync();
+        return entry;
+    }
+
+    public async Task<IEnumerable<T>> AddRangeAsync(IEnumerable<T> entries)
+    {
+        try
+        {
+            await context.AddRangeAsync(entries);
+            await context.SaveChangesAsync();
+            return entries;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     public async Task<bool> DeleteAsync(T entry)
     {
         try

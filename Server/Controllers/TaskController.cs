@@ -2,6 +2,7 @@ using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Server.UnitOfWork;
+using TaskManagement.Server.ViewModels;
 using TaskManagement.Shared.Models;
 
 namespace Server.Controllers;
@@ -28,6 +29,21 @@ public class TaskController : ControllerBase
     {
         var tasks = await taskRepository.FindAsync(x => true);
         return Ok(tasks);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> PostTaskAsync(PostTodoItem model)
+    {
+        if (model == null || !ModelState.IsValid)
+        {
+            logger.LogInformation("The model was not valid");
+            return ValidationProblem(ModelState);
+        }
+
+        var task = mapper.Map<TodoItem>(model);
+        await taskRepository.AddAsync(task);
+
+        return Created(nameof(PostTaskAsync), task);
     }
     
     [HttpGet("{id}")]

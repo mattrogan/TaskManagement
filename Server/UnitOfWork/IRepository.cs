@@ -6,5 +6,6 @@ public interface IRepository<T> where T : class
 {
     Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> expression);
     Task<T?> SingleAsync(int id);
+    Task<T> AddAsync(T entry);
     Task<bool> DeleteAsync(T entry);
 }
