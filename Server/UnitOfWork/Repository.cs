@@ -26,20 +26,6 @@ public class Repository<T> : IRepository<T> where T : class
         return entry;
     }
 
-    public async Task<IEnumerable<T>> AddRangeAsync(IEnumerable<T> entries)
-    {
-        try
-        {
-            await context.AddRangeAsync(entries);
-            await context.SaveChangesAsync();
-            return entries;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
-
     public async Task<bool> DeleteAsync(T entry)
     {
         try
