@@ -24,6 +24,7 @@ public class TaskController : ControllerBase
         this.logger = logger;
     }
 
+    #region Get Tasks
     [HttpGet]
     public async Task<IActionResult> GetTasksAsync()
     {
@@ -31,6 +32,21 @@ public class TaskController : ControllerBase
         return Ok(tasks);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetTaskAsync(int id)
+    {
+        var task = await taskRepository.SingleAsync(id);
+        if (task == null)
+        {
+            this.logger.LogInformation("Could not find task with id {TaskId}", id);
+            return NotFound(id);
+        }
+
+        return Ok(task);
+    }
+    #endregion
+
+    #region Post Tasks
     [HttpPost]
     public async Task<IActionResult> PostTaskAsync(PostTodoItem model)
     {
@@ -45,20 +61,9 @@ public class TaskController : ControllerBase
 
         return Created(nameof(PostTaskAsync), task);
     }
-    
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetTaskAsync(int id)
-    {
-        var task = await taskRepository.SingleAsync(id);
-        if (task == null)
-        {
-            this.logger.LogInformation("Could not find task with id {TaskId}", id);
-            return NotFound(id);
-        }
+    #endregion
 
-        return Ok(task);
-    }
-
+    #region Delete Tasks
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTaskAsync(int id)
     {
@@ -77,4 +82,5 @@ public class TaskController : ControllerBase
 
         return NoContent();
     }
+    #endregion
 }
