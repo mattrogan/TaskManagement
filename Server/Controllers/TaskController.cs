@@ -88,17 +88,15 @@ public class TaskController : BaseController
             return NotFound(id);
         }
 
-        try
+        mapper.Map(model, task);
+        
+        if (!await taskRepository.UpdateAsync(task))
         {
-            mapper.Map(model, task);
-            await taskRepository.UpdateAsync(task);
-            return Ok(task);
-        }
-        catch (Exception ex)
-        {
-            this.logger.LogError(ex.Message);
+            logger.LogWarning("Failed to update task with id {TaskId}", id);
             return StatusCode((int)HttpStatusCode.InternalServerError);
         }
+
+        return Ok(task);
     }
     #endregion
 
