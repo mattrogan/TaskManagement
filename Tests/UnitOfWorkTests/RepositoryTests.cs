@@ -210,5 +210,24 @@ namespace Tests.UnitOfWorkTests
             Assert.IsNotNull(result);
             Assert.AreEqual(item, result);
         }
+    
+        [TestMethod]
+        public async Task AddAsyncShouldAddANewEntry()
+        {
+            var newEntry = new TodoItem
+            {
+                Id = 123,
+                Title = "Foo",
+                Description = "Bar",
+                DueDate = DateTime.Now.AddDays(7),
+                IsCompleted = false
+            };
+
+            await repository.AddAsync(newEntry);
+
+            var addedEntry = await repository.SingleAsync(123);
+            Assert.IsNotNull(addedEntry);
+            Assert.AreEqual(newEntry, addedEntry);
+        }
     }
 }
