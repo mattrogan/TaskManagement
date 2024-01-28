@@ -13,7 +13,7 @@ public class TaskController : BaseController<TodoItem>
 {
     private readonly IRepository<TodoItem> taskRepository;
 
-    public TaskController(IUnitOfWork unitOfWork, ILogger logger, IMapper mapper)
+    public TaskController(IUnitOfWork unitOfWork, ILogger<TaskController> logger, IMapper mapper)
         : base(unitOfWork, logger, mapper)
     {
         this.taskRepository = unitOfWork.GetRepository<TodoItem>();
@@ -61,6 +61,44 @@ public class TaskController : BaseController<TodoItem>
         await taskRepository.AddAsync(task);
 
         return Created(nameof(PostTaskAsync), task);
+    }
+    #endregion
+
+    #region Put Tasks
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutTaskAsync(int id, PostTodoItem model)
+    {
+        if (model == null || !ModelState.IsValid)
+        {
+            logger.LogInformation("The model was not valid");
+
+            if (model == null)
+            {
+                ModelState.AddModelError("*", ControllerConstants.POSTMODEL_NULL_ERROR);
+            }
+
+            return ValidationProblem(ModelState);
+        }
+
+        // Find the existing task
+        var task = await taskRepository.SingleAsync(id);
+        if (task == null)
+        {
+            logger.LogInformation("Could not find task with id {TaskId}", id);
+            return NotFound(id);
+        }
+
+        try
+        {
+            mapper.Map(model, task);
+            await taskRepository.UpdateAsync(task);
+            return Ok(task);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex.Message);
+            return StatusCode((int)HttpStatusCode.InternalServerError);
+        }
     }
     #endregion
 

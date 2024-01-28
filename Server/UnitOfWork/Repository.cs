@@ -26,6 +26,20 @@ public class Repository<T> : IRepository<T> where T : class
         return entry;
     }
 
+    public async Task<bool> UpdateAsync(T entry)
+    {
+        try
+        {
+            context.Update(entry);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     public async Task<bool> DeleteAsync(T entry)
     {
         try

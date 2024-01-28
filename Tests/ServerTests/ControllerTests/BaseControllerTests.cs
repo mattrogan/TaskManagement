@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Server.Controllers;
 using Server.UnitOfWork;
 using TaskManagement.Shared.Models;
 
@@ -10,6 +11,7 @@ public class BaseControllerTests
 {
     internal Mock<IUnitOfWork> mockUnitOfWork;
     internal Mock<ILogger> mockLogger;
+    internal Mock<ILogger<TaskController>> mockTaskControllerLogger;
     internal Mock<IMapper> mockMapper;
 
     internal Mock<IRepository<TodoItem>> mockTaskRepository;
@@ -22,8 +24,9 @@ public class BaseControllerTests
         mockMapper = new(MockBehavior.Strict);
 
         mockTaskRepository = new(MockBehavior.Strict);
+        mockTaskControllerLogger = new(MockBehavior.Strict);
 
-        mockLogger
+        mockTaskControllerLogger
             .Setup(x => x.Log<It.IsAnyType>(
                     It.IsAny<LogLevel>(),
                     It.IsAny<EventId>(), 
@@ -45,5 +48,6 @@ public class BaseControllerTests
         mockMapper.Verify();
 
         mockTaskRepository.Verify();
+        mockTaskControllerLogger.Verify();
     }     
 }

@@ -257,5 +257,5 @@ public class TaskControllerTests : BaseControllerTests
     #endregion
 
     internal TaskController GetTaskController()
-        => new TaskController(mockUnitOfWork.Object, mockLogger.Object, mockMapper.Object);
+        => new TaskController(mockUnitOfWork.Object, mockTaskControllerLogger.Object, mockMapper.Object);
 }
