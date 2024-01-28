@@ -1,54 +1,19 @@
 using System.Linq.Expressions;
+using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Server.Controllers;
 using Server.UnitOfWork;
+using TaskManagement.Server.ViewModels;
 using TaskManagement.Shared.Models;
 
 namespace Tests.ServerTests.ControllerTests;
 
 [TestClass]
-public class TaskControllerTests
+public class TaskControllerTests : BaseControllerTests
 {
-    private Mock<IUnitOfWork> mockUnitOfWork;
-    private Mock<IRepository<TodoItem>> mockTaskRepository;
-    private Mock<ILogger<TaskController>> mockLogger;
-    private Mock<IMapper> mockMapper;
-
-
-    [TestInitialize]
-    public void Initialize()
-    {
-        mockUnitOfWork = new(MockBehavior.Strict);
-        mockTaskRepository = new(MockBehavior.Strict);
-        mockLogger = new(MockBehavior.Strict);
-        mockMapper = new(MockBehavior.Strict);
-
-        mockUnitOfWork
-            .Setup(x => x.GetRepository<TodoItem>())
-            .Returns(mockTaskRepository.Object)
-            .Verifiable();
-
-        mockLogger
-            .Setup(x => x.Log<It.IsAnyType>(
-                    It.IsAny<LogLevel>(),
-                    It.IsAny<EventId>(), 
-                    It.IsAny<It.IsAnyType>(),
-                    It.IsAny<Exception>(),
-                    It.IsAny<Func<It.IsAnyType, Exception, string>>()));
-    }   
-
-    [TestCleanup]
-    public void Cleanup()
-    {
-        mockUnitOfWork.Verify();
-        mockTaskRepository.Verify();
-        mockLogger.Verify();
-        mockMapper.Verify();
-    } 
-
     #region Get
     [TestMethod]
     public async Task GetTasksAsyncShouldReturnCollectionOfTasks()
@@ -151,6 +116,76 @@ public class TaskControllerTests
         var okResult = result as OkObjectResult;
         Assert.IsNotNull(okResult);
         Assert.AreEqual(task, okResult.Value);
+    }
+    #endregion
+
+    #region Post
+    [TestMethod]
+    public async Task PostTaskAsyncShouldReturnValidationProblemWhenModelIsNull()
+    {
+        var subject = GetTaskController();
+        var result = await subject.PostTaskAsync(null);
+        
+        Assert.IsInstanceOfType(result, typeof(ObjectResult));
+        var objectResult = result as ObjectResult;
+        Assert.IsNotNull(objectResult);
+        
+        var problems = objectResult.Value as ValidationProblemDetails;
+        Assert.IsNotNull(problems);
+        Assert.AreEqual(1, problems.Errors.Count());
+        
+        var error = problems.Errors.First();
+        Assert.AreEqual("*", error.Key);
+        Assert.AreEqual(ControllerConstants.POSTMODEL_NULL_ERROR, error.Value.First());
+    }
+
+    [TestMethod]
+    public async Task PostTaskAsyncShouldReturnValidationProblemWhenModelInvalid()
+    {
+        var subject = GetTaskController();
+        subject.ModelState.AddModelError("*", "error");
+        var result = await subject.PostTaskAsync(new PostTodoItem());
+        
+        Assert.IsInstanceOfType(result, typeof(ObjectResult));
+        var objectResult = result as ObjectResult;
+        Assert.IsNotNull(objectResult);
+        
+        var problems = objectResult.Value as ValidationProblemDetails;
+        Assert.IsNotNull(problems);
+        Assert.AreEqual(1, problems.Errors.Count());
+        
+        var error = problems.Errors.First();
+        Assert.AreEqual("*", error.Key);
+        Assert.AreEqual("error", error.Value.First());
+    }
+
+    [TestMethod]
+    public async Task PostTaskAsyncShouldReturnCreatedWithNewItem()
+    {
+        mockMapper
+            .Setup(x => x.Map(It.IsAny<PostTodoItem>(), It.IsAny<TodoItem>()))
+            .Returns((PostTodoItem vm, TodoItem i) => i)
+            .Verifiable();
+
+        mockTaskRepository
+            .Setup(x => x.AddAsync(It.IsAny<TodoItem>()))
+            .Returns(Task.FromResult(new TodoItem()))
+            .Verifiable();
+
+        var model = new PostTodoItem
+        {
+            Title = "Foo",
+            Description = "Bar",
+            DueDate = DateTime.Now.AddDays(3)
+        };
+
+        var subject = GetTaskController();
+        var result = await subject.PostTaskAsync(model);
+
+        Assert.IsInstanceOfType(result, typeof(ObjectResult));
+        var objectResult = result as ObjectResult;
+        Assert.IsNotNull(objectResult);
+        Assert.AreEqual((int)HttpStatusCode.Created, objectResult.StatusCode);
     }
     #endregion
 
