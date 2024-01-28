@@ -9,7 +9,7 @@ namespace Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class TaskController : BaseController<TodoItem>
+public class TaskController : BaseController
 {
     private readonly IRepository<TodoItem> taskRepository;
 

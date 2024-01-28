@@ -5,8 +5,7 @@ using Server.UnitOfWork;
 
 namespace Server.Controllers;
 
-public class BaseController<T> : ControllerBase
-    where T : class
+public class BaseController : ControllerBase
 {
     internal readonly IUnitOfWork unitOfWork;
     internal readonly IMapper mapper;
@@ -16,7 +15,7 @@ public class BaseController<T> : ControllerBase
     {
     }
 
-    public BaseController(IUnitOfWork unitOfWork, ILogger logger, IMapper mapper)
+    public BaseController(IUnitOfWork unitOfWork, ILogger<BaseController> logger, IMapper mapper)
     {
         this.unitOfWork = unitOfWork;
         this.logger = logger;

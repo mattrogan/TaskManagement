@@ -1,11 +1,8 @@
 using System.Linq.Expressions;
 using System.Net;
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Server.Controllers;
-using Server.UnitOfWork;
 using TaskManagement.Server.ViewModels;
 using TaskManagement.Shared.Models;
 
@@ -73,7 +70,7 @@ public class TaskControllerTests : BaseControllerTests
     public async Task GetTaskAsyncShouldReturnNotFoundWhenTaskDoesntExist()
     {
         var id = new Random().Next();
-        
+
         mockUnitOfWork
             .Setup(x => x.GetRepository<TodoItem>())
             .Returns(mockTaskRepository.Object)
@@ -125,15 +122,15 @@ public class TaskControllerTests : BaseControllerTests
     {
         var subject = GetTaskController();
         var result = await subject.PostTaskAsync(null);
-        
+
         Assert.IsInstanceOfType(result, typeof(ObjectResult));
         var objectResult = result as ObjectResult;
         Assert.IsNotNull(objectResult);
-        
+
         var problems = objectResult.Value as ValidationProblemDetails;
         Assert.IsNotNull(problems);
         Assert.AreEqual(1, problems.Errors.Count());
-        
+
         var error = problems.Errors.First();
         Assert.AreEqual("*", error.Key);
         Assert.AreEqual(ControllerConstants.POSTMODEL_NULL_ERROR, error.Value.First());
@@ -145,15 +142,15 @@ public class TaskControllerTests : BaseControllerTests
         var subject = GetTaskController();
         subject.ModelState.AddModelError("*", "error");
         var result = await subject.PostTaskAsync(new PostTodoItem());
-        
+
         Assert.IsInstanceOfType(result, typeof(ObjectResult));
         var objectResult = result as ObjectResult;
         Assert.IsNotNull(objectResult);
-        
+
         var problems = objectResult.Value as ValidationProblemDetails;
         Assert.IsNotNull(problems);
         Assert.AreEqual(1, problems.Errors.Count());
-        
+
         var error = problems.Errors.First();
         Assert.AreEqual("*", error.Key);
         Assert.AreEqual("error", error.Value.First());
@@ -257,5 +254,5 @@ public class TaskControllerTests : BaseControllerTests
     #endregion
 
     internal TaskController GetTaskController()
-        => new TaskController(mockUnitOfWork.Object, mockTaskControllerLogger.Object, mockMapper.Object);
+        => new TaskController(mockUnitOfWork.Object, mockLogger.Object, mockMapper.Object);
 }
