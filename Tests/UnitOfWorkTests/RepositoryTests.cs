@@ -1,7 +1,9 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Server.UnitOfWork;
 using TaskManagement.Server.Data;
+using TaskManagement.Server.MappingProfiles;
 using TaskManagement.Shared.Models;
 
 namespace Tests.UnitOfWorkTests
@@ -228,6 +230,55 @@ namespace Tests.UnitOfWorkTests
             var addedEntry = await repository.SingleAsync(123);
             Assert.IsNotNull(addedEntry);
             Assert.AreEqual(newEntry, addedEntry);
+        }
+    
+        [TestMethod]
+        public async Task UpdateAsyncShouldUpdateAnEntry()
+        {
+            var task = new TodoItem
+            {
+                Id = 1,
+                Title = "Old",
+                Description = "Older",
+                DueDate = DateTime.Now.AddDays(-2),
+                IsCompleted = false
+            };
+
+            await context.AddAsync(task);
+            await context.SaveChangesAsync();
+
+            task.Title = "New";
+            task.Description = "Newer";
+            task.DueDate = DateTime.Now.AddDays(7);
+
+            var updateSuccess = await repository.UpdateAsync(task);
+            Assert.IsTrue(updateSuccess);
+
+            var ctxTask = await repository.SingleAsync(1);
+            Assert.IsNotNull(ctxTask);
+            Assert.AreEqual(task, ctxTask);
+        }
+
+        [TestMethod]
+        public async Task DeleteAsyncShouldRemoveAnEntry()
+        {
+            var task = new TodoItem
+            {
+                Id = 123,
+                Title = "Foo",
+                Description = "Bar",
+                DueDate = DateTime.Now.AddDays(7),
+                IsCompleted = false
+            };
+
+            await context.AddAsync(task);
+            await context.SaveChangesAsync();
+
+            var deleteSuccess = await repository.DeleteAsync(task);
+            Assert.IsTrue(deleteSuccess);
+
+            var ctxTask = await repository.SingleAsync(123);
+            Assert.IsNull(ctxTask);
         }
     }
 }
