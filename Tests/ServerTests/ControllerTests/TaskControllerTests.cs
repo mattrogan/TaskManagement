@@ -1,16 +1,56 @@
 using System.Linq.Expressions;
 using System.Net;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Server.Controllers;
+using Server.UnitOfWork;
 using TaskManagement.Server.ViewModels;
 using TaskManagement.Shared.Models;
 
 namespace Tests.ServerTests.ControllerTests;
 
 [TestClass]
-public class TaskControllerTests : BaseControllerTests
+public class TaskControllerTests
 {
+
+    internal Mock<IUnitOfWork> mockUnitOfWork;
+    internal Mock<ILogger<TaskController>> mockLogger;
+    internal Mock<IMapper> mockMapper;
+    internal Mock<IRepository<TodoItem>> mockTaskRepository;
+
+    [TestInitialize]
+    public void Initialize()
+    {
+        mockUnitOfWork = new(MockBehavior.Strict);
+        mockLogger = new(MockBehavior.Strict);
+        mockMapper = new(MockBehavior.Strict);
+        mockTaskRepository = new(MockBehavior.Strict);
+
+        mockUnitOfWork
+            .Setup(x => x.GetRepository<TodoItem>())
+            .Returns(mockTaskRepository.Object)
+            .Verifiable();
+
+        mockLogger
+            .Setup(x => x.Log<It.IsAnyType>(
+                    It.IsAny<LogLevel>(),
+                    It.IsAny<EventId>(), 
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()));
+    }
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+        mockUnitOfWork.Verify();
+        mockLogger.Verify();
+        mockMapper.Verify();
+        mockTaskRepository.Verify();
+    }
+
     #region Get
     [TestMethod]
     public async Task GetTasksAsyncShouldReturnCollectionOfTasks()
@@ -71,11 +111,6 @@ public class TaskControllerTests : BaseControllerTests
     {
         var id = new Random().Next();
 
-        mockUnitOfWork
-            .Setup(x => x.GetRepository<TodoItem>())
-            .Returns(mockTaskRepository.Object)
-            .Verifiable();
-
         mockTaskRepository
             .Setup(x => x.SingleAsync(id))
             .Returns(Task.FromResult<TodoItem>(null))
@@ -95,11 +130,6 @@ public class TaskControllerTests : BaseControllerTests
     {
         var id = new Random().Next();
         var task = new TodoItem { Id = id };
-
-        mockUnitOfWork
-            .Setup(x => x.GetRepository<TodoItem>())
-            .Returns(mockTaskRepository.Object)
-            .Verifiable();
 
         mockTaskRepository
             .Setup(x => x.SingleAsync(id))
@@ -254,5 +284,7 @@ public class TaskControllerTests : BaseControllerTests
     #endregion
 
     internal TaskController GetTaskController()
-        => new TaskController(mockUnitOfWork.Object, mockLogger.Object, mockMapper.Object);
+    {
+        return new TaskController(mockUnitOfWork.Object, mockLogger.Object, mockMapper.Object);
+    }
 }
