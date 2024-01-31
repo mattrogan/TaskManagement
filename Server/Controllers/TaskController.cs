@@ -1,7 +1,9 @@
 using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Server.UnitOfWork;
+using Server.ViewModels;
 using TaskManagement.Server.ViewModels;
 using TaskManagement.Shared.Models;
 
@@ -23,7 +25,7 @@ public class TaskController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetTasksAsync()
     {
-        var tasks = await taskRepository.FindAsync(x => true);
+        var tasks = taskRepository;
         return Ok(tasks);
     }
 
@@ -38,6 +40,18 @@ public class TaskController : BaseController
         }
 
         return Ok(task);
+    }
+
+    [HttpGet("completedTasks")]
+    public async Task<IActionResult> GetCompletedTasks()
+    {
+        var completedTasks = await taskRepository.QueryAsync(t => t.IsCompleted, t => new CompletedTask
+        {
+            Title = t.Title,
+            Description = t.Description,
+            DueDate = t.DueDate
+        });
+        return Ok(completedTasks.ToListAsync());
     }
     #endregion
 

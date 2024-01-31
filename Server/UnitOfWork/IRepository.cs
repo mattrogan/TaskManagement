@@ -9,4 +9,5 @@ public interface IRepository<T> where T : class
     Task<T> AddAsync(T entry);
     Task<bool> UpdateAsync(T entry);
     Task<bool> DeleteAsync(T entry);
+    Task<IQueryable<TResult>> QueryAsync<TResult>(Expression<Func<T, bool>> expression, Expression<Func<T, TResult>> selector) where TResult : class;
 }

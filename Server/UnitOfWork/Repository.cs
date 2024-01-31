@@ -1,10 +1,12 @@
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskManagement.Server.Data;
 
 namespace Server.UnitOfWork;
 
-public class Repository<T> : IRepository<T> where T : class
+public class Repository<T> : IRepository<T> 
+    where T : class
 {
     private readonly TaskContext context;
     
@@ -52,5 +54,12 @@ public class Repository<T> : IRepository<T> where T : class
         {
             return false;
         }
+    }
+
+    public async Task<IQueryable<TResult>> QueryAsync<TResult>(Expression<Func<T, bool>> expression, Expression<Func<T, TResult>> selector)
+        where TResult : class
+    {
+        var result = context.Set<T>().Where(expression).Select(selector);
+        return result;
     }
 }
