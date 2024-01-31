@@ -8,12 +8,8 @@ namespace Server.ViewModels;
 
 public class GetTodoItem
 {
-    public GetTodoItem(TodoItem task)
+    public GetTodoItem()
     {
-        Title = task.Title;
-        Description = task.Description;
-        DueDate = task.DueDate;
-        IsCompleted = task.IsCompleted;
     }
 
     public string Title { get; set; }
@@ -27,14 +23,6 @@ public class CompletedTask
 {
     public CompletedTask()
     {
-    }
-
-    public CompletedTask(TodoItem task)
-        : this()
-    {
-        Title = task.Title;
-        Description = task.Description;
-        DueDate = task.DueDate;
     }
 
     public string Title { get; set; }
