@@ -38,13 +38,16 @@ public class TaskController : BaseController
     [HttpGet("{id}")]
     public async Task<IActionResult> GetTaskAsync(int id)
     {
-        var task = await taskRepository.QueryAsync(t => t.Id == id, t => new GetTodoItem{
+        var task = (await taskRepository.QueryAsync(t => t.Id == id, t => new GetTodoItem{
             Title = t.Title,
             Description = t.Description,
             DueDate = t.DueDate,
             IsCompleted = t.IsCompleted
-        });
-        return Ok(task.FirstOrDefaultAsync());
+        })).FirstOrDefaultAsync();
+
+        return task.Result == null
+            ? NotFound(id)
+            : Ok(task);
     }
 
     [HttpGet("completedTasks")]
