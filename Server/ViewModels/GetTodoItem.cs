@@ -1,9 +1,19 @@
+using TaskManagement.Shared.Models;
+
 namespace Server.ViewModels;
 
 public class GetTodoItem
 {
     public GetTodoItem()
     {
+    }
+
+    public GetTodoItem(TodoItem item)
+    {
+        Title = item.Title;
+        Description = item.Description;
+        DueDate = item.DueDate;
+        IsCompleted = item.IsCompleted;
     }
 
     public string Title { get; set; }
@@ -17,6 +27,13 @@ public class CompletedTask
 {
     public CompletedTask()
     {
+    }
+
+    public CompletedTask(TodoItem item)
+    {
+        Title = item.Title;
+        Description = item.Description;
+        DueDate = item.DueDate;
     }
 
     public string Title { get; set; }

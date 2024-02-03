@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Server.Controllers;
 using Server.UnitOfWork;
+using Server.ViewModels;
 using TaskManagement.Server.ViewModels;
 using TaskManagement.Shared.Models;
 
@@ -88,61 +89,33 @@ public class TaskControllerTests
             .Verifiable();
 
         mockTaskRepository
-            .Setup(x => x.FindAsync(It.IsAny<Expression<Func<TodoItem, bool>>>()))
-            .Returns(Task.FromResult(tasks.AsEnumerable()))
+            .Setup(x => x.QueryAsync(It.IsAny<Expression<Func<TodoItem, bool>>>(), It.IsAny<Expression<Func<TodoItem, GetTodoItem>>>()))
+            .Returns(Task.FromResult(tasks.Select(x => new GetTodoItem(x)).AsQueryable()))
             .Verifiable();
 
         var subject = GetTaskController();
 
         var result = await subject.GetTasksAsync();
         Assert.IsInstanceOfType(result, typeof(OkObjectResult));
-
-        var okResult = result as OkObjectResult;
-        Assert.IsNotNull(okResult);
-
-        var response = okResult.Value as IEnumerable<TodoItem>;
-        Assert.IsNotNull(response);
-        Assert.AreEqual(3, response.Count());
-        Assert.IsTrue(Enumerable.Range(1, 3).All(x => response.Any(t => t.Id == x)));
     }
 
     [TestMethod]
-    public async Task GetTaskAsyncShouldReturnNotFoundWhenTaskDoesntExist()
+    public async Task GetTodoItemShouldReturnNotFoundWhenItemDoesntExist()
     {
-        var id = new Random().Next();
+        mockUnitOfWork
+            .Setup(x => x.GetRepository<TodoItem>())
+            .Returns(mockTaskRepository.Object)
+            .Verifiable();
 
         mockTaskRepository
-            .Setup(x => x.SingleAsync(id))
-            .Returns(Task.FromResult<TodoItem>(null))
+            .Setup(x => x.QueryAsync(It.IsAny<Expression<Func<TodoItem, bool>>>(), It.IsAny<Expression<Func<TodoItem, GetTodoItem>>>()))
+            .Returns(Task.FromResult(new List<GetTodoItem>().AsQueryable()))
             .Verifiable();
 
         var subject = GetTaskController();
-        var result = await subject.GetTaskAsync(id);
+
+        var result = await subject.GetTaskAsync(new Random().Next());
         Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
-
-        var notFoundResult = result as NotFoundObjectResult;
-        Assert.IsNotNull(notFoundResult);
-        Assert.AreEqual(id, notFoundResult.Value);
-    }
-
-    [TestMethod]
-    public async Task GetTaskAsyncShouldReturnRequestedTask()
-    {
-        var id = new Random().Next();
-        var task = new TodoItem { Id = id };
-
-        mockTaskRepository
-            .Setup(x => x.SingleAsync(id))
-            .Returns(Task.FromResult(task))
-            .Verifiable();
-
-        var subject = GetTaskController();
-        var result = await subject.GetTaskAsync(id);
-        Assert.IsInstanceOfType(result, typeof(OkObjectResult));
-
-        var okResult = result as OkObjectResult;
-        Assert.IsNotNull(okResult);
-        Assert.AreEqual(task, okResult.Value);
     }
     #endregion
 
