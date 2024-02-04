@@ -92,7 +92,14 @@ public class TaskController : BaseController
     {
         if (model == null || !ModelState.IsValid)
         {
-            return BadRequest();
+            logger.LogInformation("The model was not valid");
+            
+            if (model == null)
+            {
+                ModelState.AddModelError("*", ControllerConstants.POSTMODEL_NULL_ERROR);
+            }
+
+            return ValidationProblem(ModelState);
         }
 
         // Deserialize and assert that all items correspond
@@ -102,9 +109,12 @@ public class TaskController : BaseController
         ).ConfigureAwait(false);
 
         // Verify that all tasks posted exist in the database
-        var nonExistentTasks = tasks.Where(t => !model.Select(m => m.Id).Any(m => m == t.Id));
+        var nonExistentTasks = model.Where(t => !tasks.Select(m => m.Id).Any(m => m == t.Id));
         if (nonExistentTasks.Any())
+        {
+            logger.LogInformation("Could not find tasks {NonExistentTasks}", nonExistentTasks);
             return NotFound(nonExistentTasks.Select(t => t.Id));
+        }
 
         // Set all task complete values
         foreach (var task in tasks)
@@ -112,6 +122,7 @@ public class TaskController : BaseController
 
         if (!await taskRepository.UpdateAsync(tasks))
         {
+            logger.LogError("Failed to update tasks");
             return StatusCode((int)HttpStatusCode.InternalServerError);
         }
 
