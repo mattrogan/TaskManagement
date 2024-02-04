@@ -1,7 +1,6 @@
 using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.EntityFrameworkCore;
 using Server.UnitOfWork;
 using Server.ViewModels;
@@ -38,14 +37,16 @@ public class TaskController : BaseController
     [HttpGet("{id}")]
     public async Task<IActionResult> GetTaskAsync(int id)
     {
-        var task = (await taskRepository.QueryAsync(t => t.Id == id, t => new GetTodoItem{
+        var results = await taskRepository.QueryAsync(t => t.Id == id, t => new GetTodoItem{
             Title = t.Title,
             Description = t.Description,
             DueDate = t.DueDate,
             IsCompleted = t.IsCompleted
-        })).FirstOrDefaultAsync();
+        });
 
-        return task.Result == null
+        var task = results.FirstOrDefault();
+
+        return task == null
             ? NotFound(id)
             : Ok(task);
     }

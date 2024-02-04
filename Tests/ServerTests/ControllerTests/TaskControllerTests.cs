@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Collections.Generic;
 using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +38,7 @@ public class TaskControllerTests
         mockLogger
             .Setup(x => x.Log<It.IsAnyType>(
                     It.IsAny<LogLevel>(),
-                    It.IsAny<EventId>(), 
+                    It.IsAny<EventId>(),
                     It.IsAny<It.IsAnyType>(),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception, string>>()));
@@ -102,20 +103,66 @@ public class TaskControllerTests
     [TestMethod]
     public async Task GetTodoItemShouldReturnNotFoundWhenItemDoesntExist()
     {
+        var id = new Random().Next();
+
         mockUnitOfWork
             .Setup(x => x.GetRepository<TodoItem>())
             .Returns(mockTaskRepository.Object)
             .Verifiable();
 
         mockTaskRepository
-            .Setup(x => x.QueryAsync(It.IsAny<Expression<Func<TodoItem, bool>>>(), It.IsAny<Expression<Func<TodoItem, GetTodoItem>>>()))
+            .Setup(x => x.QueryAsync(
+                It.IsAny<Expression<Func<TodoItem, bool>>>(),
+                It.IsAny<Expression<Func<TodoItem, GetTodoItem>>>()))
             .Returns(Task.FromResult(new List<GetTodoItem>().AsQueryable()))
             .Verifiable();
 
         var subject = GetTaskController();
-
-        var result = await subject.GetTaskAsync(new Random().Next());
+        var result = await subject.GetTaskAsync(id);
         Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
+
+        var notFoundResult = result as NotFoundObjectResult;
+        Assert.IsNotNull(notFoundResult);
+        Assert.AreEqual(id, notFoundResult.Value);
+    }
+
+    [TestMethod]
+    public async Task GetTodoItemShouldReturnOkWithRequestedItem()
+    {
+        var task = new TodoItem()
+        {
+            Id = new Random().Next(),
+            Title = "Foo",
+            Description = "Bar",
+            DueDate = DateTime.Now.AddDays(3),
+            IsCompleted = false
+        };
+
+        mockUnitOfWork
+            .Setup(x => x.GetRepository<TodoItem>())
+            .Returns(mockTaskRepository.Object)
+            .Verifiable();
+
+        mockTaskRepository
+            .Setup(x => x.QueryAsync(
+                It.IsAny<Expression<Func<TodoItem, bool>>>(),
+                It.IsAny<Expression<Func<TodoItem, GetTodoItem>>>()))
+            .Returns(Task.FromResult(new List<GetTodoItem> { new GetTodoItem(task) }.AsQueryable()))
+            .Verifiable();
+
+        var subject = GetTaskController();
+        var result = await subject.GetTaskAsync(task.Id);
+        Assert.IsInstanceOfType(result, typeof(OkObjectResult));
+
+        var okResult = result as OkObjectResult;
+        Assert.IsNotNull(okResult);
+
+        var model = okResult.Value as GetTodoItem;
+        Assert.IsNotNull(model);
+        Assert.AreEqual(task.Title, model.Title);
+        Assert.AreEqual(task.Description, model.Description);
+        Assert.AreEqual(task.DueDate, model.DueDate);
+        Assert.AreEqual(task.IsCompleted, model.IsCompleted);
     }
     #endregion
 
@@ -234,7 +281,7 @@ public class TaskControllerTests
     public async Task PutTaskAsyncShouldReturnNotFoundWhenTaskDoesntExist()
     {
         var id = new Random().Next();
-        
+
         mockTaskRepository
             .Setup(x => x.SingleAsync(id))
             .Returns(Task.FromResult<TodoItem>(null))
@@ -248,15 +295,15 @@ public class TaskControllerTests
         Assert.IsNotNull(notFoundResult);
         Assert.AreEqual(id, notFoundResult.Value);
     }
-    
+
     [TestMethod]
     public async Task PutTaskAsyncShouldReturnInternalServerErrorWhenUpdateFails()
     {
         var id = new Random().Next();
-        
+
         mockTaskRepository
             .Setup(x => x.SingleAsync(id))
-            .Returns(Task.FromResult(new TodoItem(){ Id = id }))
+            .Returns(Task.FromResult(new TodoItem() { Id = id }))
             .Verifiable();
 
         mockMapper
@@ -277,7 +324,7 @@ public class TaskControllerTests
         Assert.IsNotNull(statusResult);
         Assert.AreEqual((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
     }
-    
+
     [TestMethod]
     public async Task PutTaskAsyncShouldReturnOkAndUpdateTask()
     {
