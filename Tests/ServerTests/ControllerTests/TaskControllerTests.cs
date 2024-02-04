@@ -380,6 +380,76 @@ public class TaskControllerTests
         Assert.AreEqual(model.Description, returnTask.Description);
         Assert.AreEqual(model.DueDate, returnTask.DueDate);
     }
+    
+    [TestMethod]
+    public async Task CompleteTasksShouldReturnBadRequestWhenModelIsNull()
+    {
+        var subject = GetTaskController();
+        var result = await subject.CompleteTasks(null);
+
+        Assert.IsInstanceOfType(result, typeof(ObjectResult));
+        var objectResult = result as ObjectResult;
+        Assert.IsNotNull(objectResult);
+
+        // Assertions on the object result
+        var problems = objectResult.Value as ValidationProblemDetails;
+        Assert.IsNotNull(problems);
+        Assert.AreEqual(1, problems.Errors.Count());
+
+        var error = problems.Errors.First();
+        Assert.AreEqual("*", error.Key);
+        Assert.AreEqual(ControllerConstants.POSTMODEL_NULL_ERROR, error.Value.First());
+    }
+
+    [TestMethod]
+    public async Task CompleteTasksShouldReturnBadRequestWhenModelInvalid()
+    {
+        var subject = GetTaskController();
+        subject.ModelState.AddModelError("*", "error");
+        var result = await subject.CompleteTasks(new List<CompleteTodoItem>());
+
+        Assert.IsInstanceOfType(result, typeof(ObjectResult));
+        var objectResult = result as ObjectResult;
+        Assert.IsNotNull(objectResult);
+
+        // Assertions on the object result
+        var problems = objectResult.Value as ValidationProblemDetails;
+        Assert.IsNotNull(problems);
+        Assert.AreEqual(1, problems.Errors.Count());
+
+        var error = problems.Errors.First();
+        Assert.AreEqual("*", error.Key);
+        Assert.AreEqual("error", error.Value.First());
+    }
+
+    [TestMethod]
+    public async Task CompleteTasksShouldReturnNotFoundWhenTaskIdNotInDatabase()
+    {
+        var id = new Random().Next();
+
+        mockUnitOfWork
+            .Setup(x => x.GetRepository<TodoItem>())
+            .Returns(mockTaskRepository.Object)
+            .Verifiable();
+
+        mockTaskRepository
+            .Setup(x => x.QueryAsync(It.IsAny<Expression<Func<TodoItem, bool>>>(), It.IsAny<Expression<Func<TodoItem,TodoItem>>>()))
+            .Returns(Task.FromResult(new List<TodoItem>().AsQueryable()))
+            .Verifiable();
+
+        var model = new List<CompleteTodoItem>
+        {
+            new CompleteTodoItem { Id = id, Complete = true }
+        };
+
+        var subject = GetTaskController();
+        var result = await subject.CompleteTasks(model);
+        Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
+
+        var notFoundResult = result as NotFoundObjectResult;
+        Assert.IsNotNull(notFoundResult);
+        Assert.AreEqual(id, notFoundResult.Value);
+    }
     #endregion
 
     #region Delete
