@@ -42,6 +42,20 @@ public class Repository<T> : IRepository<T>
         }
     }
 
+    public async Task<bool> UpdateAsync(IEnumerable<T> entries)
+    {
+        try
+        {
+            context.UpdateRange(entries);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     public async Task<bool> DeleteAsync(T entry)
     {
         try

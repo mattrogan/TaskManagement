@@ -1,6 +1,7 @@
 using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.EntityFrameworkCore;
 using Server.UnitOfWork;
 using Server.ViewModels;
@@ -85,6 +86,38 @@ public class TaskController : BaseController
 
         return Created(nameof(PostTaskAsync), task);
     }
+    
+    [HttpPost("completeTasks")]
+    public async Task<IActionResult> CompleteTasks([FromBody] IEnumerable<CompleteTodoItem> model, CancellationToken ct = default)
+    {
+        if (model == null || !ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        // Deserialize and assert that all items correspond
+        var tasks = await taskRepository.QueryAsync(
+            t => model.Select(m => m.Id).Contains(t.Id),
+            t => t
+        ).ConfigureAwait(false);
+
+        // Verify that all tasks posted exist in the database
+        var nonExistentTasks = tasks.Where(t => !model.Select(m => m.Id).Any(m => m == t.Id));
+        if (nonExistentTasks.Any())
+            return NotFound(nonExistentTasks.Select(t => t.Id));
+
+        // Set all task complete values
+        foreach (var task in tasks)
+            task.IsCompleted = model.Single(t => t.Id == task.Id).Complete;
+
+        if (!await taskRepository.UpdateAsync(tasks))
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError);
+        }
+
+        return Ok(tasks);
+    }
+
     #endregion
 
     #region Put Tasks
