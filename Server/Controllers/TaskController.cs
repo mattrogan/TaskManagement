@@ -1,7 +1,9 @@
 using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Server.UnitOfWork;
+using Server.ViewModels;
 using TaskManagement.Server.ViewModels;
 using TaskManagement.Shared.Models;
 
@@ -23,21 +25,42 @@ public class TaskController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetTasksAsync()
     {
-        var tasks = await taskRepository.FindAsync(x => true);
-        return Ok(tasks);
+        var tasks = await taskRepository.QueryAsync(t => true, t => new GetTodoItem{
+            Title = t.Title,
+            Description = t.Description,
+            DueDate = t.DueDate,
+            IsCompleted = t.IsCompleted
+        });
+        return Ok(tasks.ToListAsync());
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetTaskAsync(int id)
     {
-        var task = await taskRepository.SingleAsync(id);
-        if (task == null)
-        {
-            this.logger.LogInformation("Could not find task with id {TaskId}", id);
-            return NotFound(id);
-        }
+        var results = await taskRepository.QueryAsync(t => t.Id == id, t => new GetTodoItem{
+            Title = t.Title,
+            Description = t.Description,
+            DueDate = t.DueDate,
+            IsCompleted = t.IsCompleted
+        });
 
-        return Ok(task);
+        var task = results.FirstOrDefault();
+
+        return task == null
+            ? NotFound(id)
+            : Ok(task);
+    }
+
+    [HttpGet("completedTasks")]
+    public async Task<IActionResult> GetCompletedTasks()
+    {
+        var completedTasks = await taskRepository.QueryAsync(t => t.IsCompleted, t => new CompletedTask
+        {
+            Title = t.Title,
+            Description = t.Description,
+            DueDate = t.DueDate
+        });
+        return Ok(completedTasks.ToListAsync());
     }
     #endregion
 

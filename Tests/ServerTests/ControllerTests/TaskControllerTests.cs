@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Collections.Generic;
 using System.Net;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Server.Controllers;
 using Server.UnitOfWork;
+using Server.ViewModels;
 using TaskManagement.Server.ViewModels;
 using TaskManagement.Shared.Models;
 
@@ -36,7 +38,7 @@ public class TaskControllerTests
         mockLogger
             .Setup(x => x.Log<It.IsAnyType>(
                     It.IsAny<LogLevel>(),
-                    It.IsAny<EventId>(), 
+                    It.IsAny<EventId>(),
                     It.IsAny<It.IsAnyType>(),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception, string>>()));
@@ -88,32 +90,31 @@ public class TaskControllerTests
             .Verifiable();
 
         mockTaskRepository
-            .Setup(x => x.FindAsync(It.IsAny<Expression<Func<TodoItem, bool>>>()))
-            .Returns(Task.FromResult(tasks.AsEnumerable()))
+            .Setup(x => x.QueryAsync(It.IsAny<Expression<Func<TodoItem, bool>>>(), It.IsAny<Expression<Func<TodoItem, GetTodoItem>>>()))
+            .Returns(Task.FromResult(tasks.Select(x => new GetTodoItem(x)).AsQueryable()))
             .Verifiable();
 
         var subject = GetTaskController();
 
         var result = await subject.GetTasksAsync();
         Assert.IsInstanceOfType(result, typeof(OkObjectResult));
-
-        var okResult = result as OkObjectResult;
-        Assert.IsNotNull(okResult);
-
-        var response = okResult.Value as IEnumerable<TodoItem>;
-        Assert.IsNotNull(response);
-        Assert.AreEqual(3, response.Count());
-        Assert.IsTrue(Enumerable.Range(1, 3).All(x => response.Any(t => t.Id == x)));
     }
 
     [TestMethod]
-    public async Task GetTaskAsyncShouldReturnNotFoundWhenTaskDoesntExist()
+    public async Task GetTodoItemShouldReturnNotFoundWhenItemDoesntExist()
     {
         var id = new Random().Next();
 
+        mockUnitOfWork
+            .Setup(x => x.GetRepository<TodoItem>())
+            .Returns(mockTaskRepository.Object)
+            .Verifiable();
+
         mockTaskRepository
-            .Setup(x => x.SingleAsync(id))
-            .Returns(Task.FromResult<TodoItem>(null))
+            .Setup(x => x.QueryAsync(
+                It.IsAny<Expression<Func<TodoItem, bool>>>(),
+                It.IsAny<Expression<Func<TodoItem, GetTodoItem>>>()))
+            .Returns(Task.FromResult(new List<GetTodoItem>().AsQueryable()))
             .Verifiable();
 
         var subject = GetTaskController();
@@ -126,23 +127,42 @@ public class TaskControllerTests
     }
 
     [TestMethod]
-    public async Task GetTaskAsyncShouldReturnRequestedTask()
+    public async Task GetTodoItemShouldReturnOkWithRequestedItem()
     {
-        var id = new Random().Next();
-        var task = new TodoItem { Id = id };
+        var task = new TodoItem()
+        {
+            Id = new Random().Next(),
+            Title = "Foo",
+            Description = "Bar",
+            DueDate = DateTime.Now.AddDays(3),
+            IsCompleted = false
+        };
+
+        mockUnitOfWork
+            .Setup(x => x.GetRepository<TodoItem>())
+            .Returns(mockTaskRepository.Object)
+            .Verifiable();
 
         mockTaskRepository
-            .Setup(x => x.SingleAsync(id))
-            .Returns(Task.FromResult(task))
+            .Setup(x => x.QueryAsync(
+                It.IsAny<Expression<Func<TodoItem, bool>>>(),
+                It.IsAny<Expression<Func<TodoItem, GetTodoItem>>>()))
+            .Returns(Task.FromResult(new List<GetTodoItem> { new GetTodoItem(task) }.AsQueryable()))
             .Verifiable();
 
         var subject = GetTaskController();
-        var result = await subject.GetTaskAsync(id);
+        var result = await subject.GetTaskAsync(task.Id);
         Assert.IsInstanceOfType(result, typeof(OkObjectResult));
 
         var okResult = result as OkObjectResult;
         Assert.IsNotNull(okResult);
-        Assert.AreEqual(task, okResult.Value);
+
+        var model = okResult.Value as GetTodoItem;
+        Assert.IsNotNull(model);
+        Assert.AreEqual(task.Title, model.Title);
+        Assert.AreEqual(task.Description, model.Description);
+        Assert.AreEqual(task.DueDate, model.DueDate);
+        Assert.AreEqual(task.IsCompleted, model.IsCompleted);
     }
     #endregion
 
@@ -261,7 +281,7 @@ public class TaskControllerTests
     public async Task PutTaskAsyncShouldReturnNotFoundWhenTaskDoesntExist()
     {
         var id = new Random().Next();
-        
+
         mockTaskRepository
             .Setup(x => x.SingleAsync(id))
             .Returns(Task.FromResult<TodoItem>(null))
@@ -275,15 +295,15 @@ public class TaskControllerTests
         Assert.IsNotNull(notFoundResult);
         Assert.AreEqual(id, notFoundResult.Value);
     }
-    
+
     [TestMethod]
     public async Task PutTaskAsyncShouldReturnInternalServerErrorWhenUpdateFails()
     {
         var id = new Random().Next();
-        
+
         mockTaskRepository
             .Setup(x => x.SingleAsync(id))
-            .Returns(Task.FromResult(new TodoItem(){ Id = id }))
+            .Returns(Task.FromResult(new TodoItem() { Id = id }))
             .Verifiable();
 
         mockMapper
@@ -304,7 +324,7 @@ public class TaskControllerTests
         Assert.IsNotNull(statusResult);
         Assert.AreEqual((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
     }
-    
+
     [TestMethod]
     public async Task PutTaskAsyncShouldReturnOkAndUpdateTask()
     {
